@@ -601,7 +601,7 @@ body {
           <div class="mh-num">PDR-58291</div>
           <div class="mh-title" id="modal-title">Escritório Alves &amp; Costa</div>
           <div class="mh-meta">
-            <span class="chip chip-warn">Em Exigência</span>
+            <span class="chip chip-warn">Aguardando Regularização</span>
             <span class="chip chip-grey">RGI</span>
             <span class="chip chip-grey">1º RI São Paulo/SP</span>
           </div>
@@ -610,7 +610,7 @@ body {
       </div>
 
       <div class="sla-strip" id="sla-strip">
-        <span class="sla-label-txt">🔴 SLA Crítico</span>
+        <span class="sla-label-txt">🔴 Fora do Prazo</span>
         <div class="sla-bar-track"><div class="sla-bar-fill" id="sla-fill" style="width:12%"></div></div>
         <span class="sla-remain" id="sla-remain">1h 48min restantes</span>
       </div>
@@ -745,7 +745,7 @@ body {
             </div>
             <div class="field">
               <label>Canal <span style="color:var(--crit)">*</span></label>
-              <select id="f-canal">
+              <select id="f-canal" onchange="onCanalChange(this.value)">
                 <option value="">Selecionar…</option>
                 <option>WhatsApp</option>
                 <option>Telefone</option>
@@ -760,11 +760,51 @@ body {
             </div>
           </div>
 
+          <!-- campo condicional telefone -->
+          <div class="frow col1" id="row-fone" hidden>
+            <div class="field">
+              <label>Telefone</label>
+              <input id="f-fone" type="tel" placeholder="(00) 00000-0000">
+            </div>
+          </div>
+
+          <!-- campo condicional e-mail -->
+          <div class="frow col1" id="row-email" hidden>
+            <div class="field">
+              <label>E-mail</label>
+              <input id="f-email" type="email" placeholder="contato@exemplo.com.br">
+            </div>
+          </div>
+
           <div class="frow col1">
             <div class="field">
               <label>Observação Interna <span style="color:var(--crit)">*</span></label>
               <textarea id="f-obs" placeholder="Descreva o que foi tratado, próximos passos e informações relevantes para o time de Operações…"></textarea>
               <div class="field-hint">Não será exibido ao cliente.</div>
+            </div>
+          </div>
+
+          <div class="frow col1">
+            <div class="field">
+              <label>Anexos</label>
+              <div id="drop-zone" style="
+                border: 2px dashed var(--border);
+                border-radius: 6px;
+                padding: 16px;
+                text-align: center;
+                cursor: pointer;
+                background: var(--surface);
+                transition: border-color .15s, background .15s;
+              " onclick="document.getElementById('f-anexo').click()"
+                 ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-lt)'"
+                 ondragleave="this.style.borderColor='';this.style.background=''"
+                 ondrop="handleDrop(event)">
+                <div style="font-size:20px;margin-bottom:4px">📎</div>
+                <div style="font-size:12px;color:var(--mid);font-weight:500">Clique para selecionar ou arraste arquivos aqui</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">PDF, JPG, PNG, DOCX — até 10 MB por arquivo</div>
+              </div>
+              <input id="f-anexo" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.docx" style="display:none" onchange="handleFiles(this.files)">
+              <div id="file-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
             </div>
           </div>
         </div>
@@ -830,6 +870,45 @@ body {
 <div class="toast" id="toast">✓ Ação registrada com sucesso</div>
 
 <script>
+// ── CANAL CONDICIONAL ───────────────────────────────────
+function onCanalChange(val) {
+  document.getElementById('row-fone').hidden  = (val !== 'Telefone');
+  document.getElementById('row-email').hidden = (val !== 'E-mail');
+}
+
+// ── ANEXOS ──────────────────────────────────────────────
+let anexos = [];
+
+function handleFiles(fileList) {
+  Array.from(fileList).forEach(f => addAnexo(f));
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = '';
+  document.getElementById('drop-zone').style.background = '';
+  handleFiles(e.dataTransfer.files);
+}
+function addAnexo(file) {
+  const id = Date.now() + Math.random();
+  anexos.push({ id, file });
+  const ext = file.name.split('.').pop().toUpperCase();
+  const kb  = (file.size / 1024).toFixed(0);
+  const el  = document.createElement('div');
+  el.id = 'anexo-' + id;
+  el.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;';
+  el.innerHTML = `
+    <span style="background:var(--accent-lt);color:var(--accent);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">${ext}</span>
+    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)">${file.name}</span>
+    <span style="color:var(--muted);flex-shrink:0">${kb} KB</span>
+    <button onclick="removeAnexo(${id})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0 2px;line-height:1" title="Remover">✕</button>`;
+  document.getElementById('file-list').appendChild(el);
+}
+function removeAnexo(id) {
+  anexos = anexos.filter(a => a.id !== id);
+  const el = document.getElementById('anexo-' + id);
+  if (el) el.remove();
+}
+
 // ── OPEN / CLOSE ────────────────────────────────────────
 function openModal() {
   document.getElementById('overlay').hidden = false;
