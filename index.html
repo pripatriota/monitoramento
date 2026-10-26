@@ -599,6 +599,18 @@ body {
 .btn-danger { background:var(--crit); color:#fff; }
 .btn-danger:hover { opacity:.9; }
 
+/* anexos (Histórico e Visão do Cliente) */
+.anx-box { margin-top: 6px; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; background: var(--surface); }
+.anx-box .anx-h { display:flex; align-items:center; gap:8px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--mid); margin-bottom:4px; }
+.anx-box .anx-tag { margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; font-size:10.5px; border-radius:99px; padding:1px 8px; }
+.anx-box .anx-tag.vis { background:var(--cli-bg); color:var(--cli-txt); border:1px solid var(--cli-bd); }
+.anx-box .anx-tag.int { background:var(--int-bg); color:var(--int-txt); border:1px solid var(--int-bd); }
+.anx-row { display:flex; align-items:center; gap:8px; font-size:12px; padding:3px 0; }
+.anx-ext { font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:4px; background:var(--accent-lt); color:var(--accent); }
+.anx-ext.pdf { background:var(--crit-lt); color:var(--crit); }
+.anx-ext.img { background:var(--ok-lt); color:var(--ok); }
+.anx-nome { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); }
+.anx-tam { color:var(--muted); font-size:11px; flex-shrink:0; }
 @media (max-width: 600px) {
   .frow.cols3 { grid-template-columns: 1fr 1fr; }
   .frow.cols2 { grid-template-columns: 1fr; }
@@ -848,10 +860,11 @@ body {
                  ondrop="handleDrop(event)">
                 <div style="font-size:20px;margin-bottom:4px">📎</div>
                 <div style="font-size:12px;color:var(--mid);font-weight:500">Clique para selecionar ou arraste arquivos aqui</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px">PDF, JPG, PNG, DOCX — até 10 MB por arquivo</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">PDF, JPG, PNG — até 40 MB por arquivo</div>
               </div>
-              <input id="f-anexo" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.docx" style="display:none" onchange="handleFiles(this.files)">
+              <input id="f-anexo" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFiles(this.files)">
               <div id="file-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+              <div id="anx-aviso" hidden style="margin-top:8px;font-size:11.5px;font-weight:500;border-radius:6px;padding:7px 10px"></div>
             </div>
           </div>
         </div>
@@ -862,7 +875,7 @@ body {
           <div class="frow col1">
             <div class="field">
               <label>Mensagem Padronizada</label>
-              <select id="f-msg">
+              <select id="f-msg" onchange="updateAnxAviso()">
                 <option value="">— Nenhuma mensagem ao cliente nesta ação —</option>
                 <option>Aguardando documentação complementar do cliente.</option>
                 <option>O boleto de emolumentos foi emitido e está disponível no portal.</option>
@@ -881,7 +894,7 @@ body {
       <div class="panel" id="panel-cli">
         <div class="cli-notice">
           <span style="font-size:18px;flex-shrink:0">👁</span>
-          <p>Esta é a visão que o cliente vê no portal dele. Apenas as <strong>mensagens padronizadas</strong> aparecem aqui — observações internas são ocultadas.</p>
+          <p>Esta é a visão que o cliente vê no portal dele. Apenas as <strong>mensagens padronizadas</strong> e os anexos dessas ações aparecem aqui — observações internas são ocultadas.</p>
         </div>
         <div class="cli-steps" id="cli-steps"></div>
       </div>
@@ -929,7 +942,21 @@ function handleDrop(e) {
   document.getElementById('drop-zone').style.background = '';
   handleFiles(e.dataTransfer.files);
 }
+function fmtSize(b) { return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+function updateAnxAviso() {
+  const el = document.getElementById('anx-aviso');
+  if (!anexos.length) { el.hidden = true; return; }
+  const comMsg = !!document.getElementById('f-msg').value;
+  el.hidden = false;
+  el.textContent = comMsg ? 'Os anexos desta ação ficarão visíveis ao cliente.' : 'Sem mensagem ao cliente, os anexos ficam visíveis somente para Operações.';
+  el.style.background = comMsg ? 'var(--cli-bg)' : 'var(--int-bg)';
+  el.style.color = comMsg ? 'var(--cli-txt)' : 'var(--int-txt)';
+  el.style.border = '1px solid ' + (comMsg ? 'var(--cli-bd)' : 'var(--int-bd)');
+}
 function addAnexo(file) {
+  const ext0 = file.name.split('.').pop().toLowerCase();
+  if (!['pdf', 'jpg', 'jpeg', 'png'].includes(ext0)) { showError('Arquivo "' + file.name + '" recusado: formato não permitido (use PDF, JPG ou PNG).'); return; }
+  if (file.size > 40 * 1048576) { showError('Arquivo "' + file.name + '" recusado: acima de 40 MB.'); return; }
   const id = Date.now() + Math.random();
   anexos.push({ id, file });
   const ext = file.name.split('.').pop().toUpperCase();
@@ -943,11 +970,13 @@ function addAnexo(file) {
     <span style="color:var(--muted);flex-shrink:0">${kb} KB</span>
     <button onclick="removeAnexo(${id})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0 2px;line-height:1" title="Remover">✕</button>`;
   document.getElementById('file-list').appendChild(el);
+  updateAnxAviso();
 }
 function removeAnexo(id) {
   anexos = anexos.filter(a => a.id !== id);
   const el = document.getElementById('anexo-' + id);
   if (el) el.remove();
+  updateAnxAviso();
 }
 
 // ── OPEN / CLOSE ────────────────────────────────────────
@@ -1015,14 +1044,16 @@ const entries = [
   { id: 1, ts: new Date(2026, 9, 20, 9, 42, 17), author: 'Priscilla P.', tipo: 'Contato com Cliente', canal: 'WhatsApp', contato: '',
     obs: 'Liguei para o cliente solicitando o envio da certidão atualizada. Cliente informou que está resolvendo com o cartório de origem. Aguardar até amanhã 14h.',
     msg: 'Sua solicitação requer documentação complementar. Entraremos em contato em breve com as orientações necessárias.',
-    title: 'Documentação complementar necessária.', sla: 'crit', edits: [], deleted: null },
+    title: 'Documentação complementar necessária.', sla: 'crit',
+    anexos: [ { nome: 'Nota_de_exigencia_1RI.pdf', tam: '245 KB' }, { nome: 'Matricula_atualizada.pdf', tam: '1,2 MB' } ], edits: [], deleted: null },
   { id: 2, ts: new Date(2026, 9, 20, 8, 15, 48), author: 'João M.', tipo: 'Contato com Cartório', canal: 'E-mail', contato: '',
     obs: 'E-mail enviado ao 1º RI SP perguntando status da exigência. Protocolo cartório: 2024-SP-88821. Aguardando retorno.',
-    msg: '', sla: 'warn', edits: [], deleted: null },
+    msg: '', sla: 'warn', anexos: [ { nome: 'Protocolo_cartorio.pdf', tam: '98 KB' } ], edits: [], deleted: null },
   { id: 3, ts: new Date(2026, 9, 19, 16, 30, 5), author: 'Carla T.', tipo: 'Acompanhamento de Pagamento', canal: 'Sistema', contato: '',
     obs: 'Boleto de emolumentos emitido — R$ 1.248,00. Vencimento 21/10. Aguardando confirmação de pagamento no sistema.',
     msg: 'O boleto de emolumentos foi emitido e está disponível no portal. Efetue o pagamento até a data de vencimento.',
-    title: 'Boleto de emolumentos disponível.', sla: '', edits: [], deleted: null },
+    title: 'Boleto de emolumentos disponível.', sla: '',
+    anexos: [ { nome: 'Boleto_emolumentos.pdf', tam: '118 KB' } ], edits: [], deleted: null },
   { id: 4, ts: new Date(2026, 9, 18, 11, 5, 33), author: 'Priscilla P.', tipo: 'Contato com Cliente', canal: 'Telefone', contato: 'Sr. Roberto',
     obs: 'Cliente confirmou o envio da procuração por e-mail.',
     msg: '', sla: 'ok', edits: [], deleted: null }
@@ -1041,6 +1072,22 @@ function tipoTag(tipo) {
   if (tipo.includes('Pagamento')) return 'pagamento';
   return 'outros';
 }
+
+// ── ANEXOS: exibição ────────────────────────────────────
+function anxRows(list) {
+  return list.map(a => {
+    const ext = a.nome.split('.').pop().toLowerCase();
+    const cls = ext === 'pdf' ? 'pdf' : 'img';
+    return `<div class="anx-row"><span class="anx-ext ${cls}">${ext.toUpperCase()}</span><span class="anx-nome" title="${esc(a.nome)}">${esc(a.nome)}</span><span class="anx-tam">${a.tam}</span><button class="mini-btn" onclick="baixar('${esc(a.nome)}')">Baixar</button></div>`;
+  }).join('');
+}
+// Operação vê todos os anexos; só ficam visíveis ao cliente quando a ação tem Mensagem Padronizada
+function anxBox(e) {
+  if (!e.anexos || !e.anexos.length) return '';
+  const tag = e.msg ? '<span class="anx-tag vis">👁 Visível ao cliente</span>' : '<span class="anx-tag int">🔒 Somente Operações</span>';
+  return `<div class="anx-box"><div class="anx-h">📎 Anexos ${tag}</div>${anxRows(e.anexos)}</div>`;
+}
+function baixar(nome) { showToast('Download simulado: ' + nome); }
 
 // ── RENDER: HISTÓRICO ───────────────────────────────────
 function histBlock(e) {
@@ -1085,7 +1132,7 @@ function cardHtml(e) {
         <span class="chip chip-grey" style="font-size:10.5px">${esc(e.canal)}</span>${ct}
         <span class="tl-op">por <strong>${esc(e.author)}</strong></span>${del}
       </div>
-      ${histBlock(e)}${msg}
+      ${histBlock(e)}${msg}${anxBox(e)}
     </div></div></div>`;
 }
 function renderHist() {
@@ -1102,10 +1149,10 @@ function renderCli() {
   box.innerHTML = list.map(e => {
     const ico = e.tipo.includes('Pagamento') ? '💳' : (e.tipo.includes('Cartório') || e.tipo.includes('Cartorio')) ? '🏛️' : '📋';
     const cls = e.tipo.includes('Pagamento') ? 'ok' : 'warn';
-    const d = simDate(e.ts);
+    const d = fDt(e.ts) + ' às ' + fHr(e.ts);
     return `<div class="cli-step"><div class="cli-ico ${cls}">${ico}</div><div class="cli-body">
       <div class="cli-msg">${esc(e.title || e.tipo)}</div>
-      <div class="cli-dt">${d}</div><div class="cli-sub">${esc(e.msg)}</div></div></div>`;
+      <div class="cli-dt">${d}</div><div class="cli-sub">${esc(e.msg)}</div>${(e.anexos && e.anexos.length) ? '<div class="anx-box"><div class="anx-h">📎 Anexos</div>' + anxRows(e.anexos) + '</div>' : ''}</div></div>`;
   }).join('');
 }
 const simDate = d => pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' às ' + fHm(d);
@@ -1171,7 +1218,8 @@ function salvar() {
   }
   const msg = document.getElementById('f-msg').value;
   const contato = document.getElementById('f-contato').value;
-  entries.push({ id: ++seq, ts: simNow(), author: ME, tipo, canal, contato, obs, msg, sla: curSla, edits: [], deleted: null });
+  entries.push({ id: ++seq, ts: simNow(), author: ME, tipo, canal, contato, obs, msg, sla: curSla, anexos: anexos.map(a => ({ nome: a.file.name, tam: fmtSize(a.file.size) })), edits: [], deleted: null });
+  anexos = []; document.getElementById('file-list').innerHTML = ''; updateAnxAviso();
 
   ['f-tipo','f-canal','f-contato','f-obs','f-msg'].forEach(id => { document.getElementById(id).value = ''; });
   clearError();
