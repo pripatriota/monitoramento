@@ -298,12 +298,12 @@ body {
 .timeline { display: flex; flex-direction: column; gap: 0; }
 .tl-item {
   display: grid;
-  grid-template-columns: 68px 1fr;
+  grid-template-columns: 82px 1fr;
   position: relative;
 }
 .tl-line {
   position: absolute;
-  left: 63px;
+  left: 77px;
   top: 22px;
   bottom: -8px;
   width: 2px;
@@ -312,7 +312,7 @@ body {
 .tl-item:last-child .tl-line { display: none; }
 .tl-dot {
   position: absolute;
-  left: 57px;
+  left: 71px;
   top: 16px;
   width: 12px; height: 12px;
   border-radius: 50%;
@@ -567,6 +567,38 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+
+/* ── EDIÇÃO / EXCLUSÃO (PDR-1384, PDR-1386) ───────── */
+.demo-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; border:1px dashed var(--border); border-radius:6px; padding:7px 10px; margin-bottom:12px; font-size:11px; color:var(--muted); background:var(--surface2); }
+.demo-bar select { font:inherit; font-size:11.5px; padding:3px 6px; border:1px solid var(--border); border-radius:5px; background:var(--surface); color:var(--ink); }
+.demo-bar .sp { margin-left:auto; }
+.mini-btn { display:inline-flex; align-items:center; gap:4px; font:inherit; font-size:11px; font-weight:600; padding:3px 8px; border-radius:5px; border:1px solid var(--border); background:var(--surface); color:var(--mid); cursor:pointer; transition:all .15s; }
+.mini-btn:hover { border-color:var(--accent); color:var(--accent); }
+.mini-btn.danger:hover { border-color:var(--crit); color:var(--crit); background:var(--crit-lt); }
+.obs-lbl { display:flex; align-items:center; gap:8px; }
+.obs-lbl .grow { flex:1; }
+.obs-lbl .mini-btn { text-transform:none; letter-spacing:0; }
+.lnk { background:none; border:0; padding:0; font:inherit; font-size:10.5px; font-weight:600; color:var(--accent); cursor:pointer; text-transform:none; letter-spacing:0; text-decoration:underline; }
+.edit-ta { width:100%; min-height:70px; box-sizing:border-box; font:inherit; font-size:12px; line-height:1.6; padding:8px 10px; border:1px solid var(--int-bd); border-radius:6px; background:#fff; color:var(--ink); resize:vertical; }
+.edit-ta:focus { outline:2px solid var(--accent-lt); border-color:var(--accent); }
+.edit-actions { display:flex; align-items:center; gap:6px; margin-top:6px; }
+.edit-err { color:var(--crit); font-size:11px; font-weight:500; }
+.edit-hist { margin-top:8px; border-top:1px dashed var(--int-bd); padding-top:7px; font-size:11px; color:var(--mid); line-height:1.5; }
+.edit-hist .ver { margin-bottom:7px; }
+.edit-hist .ver b { color:var(--ink); }
+.edit-hist .meta { color:var(--muted); font-size:10.5px; }
+.edit-hist .txt { background:rgba(255,255,255,.7); border-radius:4px; padding:4px 7px; margin-top:2px; }
+.edit-hist .old { color:var(--muted); }
+.lock-note { font-size:10.5px; color:var(--muted); margin-top:5px; }
+.confirm-ov { position:fixed; inset:0; background:rgba(15,23,42,.45); display:flex; align-items:center; justify-content:center; z-index:300; padding:16px; }
+.confirm-ov[hidden] { display:none !important; }
+.confirm-box { background:#fff; border-radius:10px; padding:18px 20px; max-width:380px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+.confirm-box h4 { margin:0 0 6px; font-size:14px; color:var(--ink); }
+.confirm-box p { margin:0 0 14px; font-size:12.5px; color:var(--mid); line-height:1.55; }
+.confirm-box .row { display:flex; justify-content:flex-end; gap:8px; }
+.btn-danger { background:var(--crit); color:#fff; }
+.btn-danger:hover { opacity:.9; }
+
 @media (max-width: 600px) {
   .frow.cols3 { grid-template-columns: 1fr 1fr; }
   .frow.cols2 { grid-template-columns: 1fr; }
@@ -709,6 +741,14 @@ body {
 
       <!-- ── HISTÓRICO ──────────────────────────────── -->
       <div class="panel active" id="panel-hist">
+        <div class="demo-bar">
+          <span>Protótipo · usuário logado:</span>
+          <select id="demo-user" onchange="setUser(this.value)">
+            <option>Priscilla P.</option><option>João M.</option><option>Carla T.</option>
+          </select>
+          <span id="demo-clock">Data/hora simulada: —</span>
+          <button class="mini-btn sp" onclick="advanceClock()" title="Avança o relógio simulado para testar a regra de 24 horas">⏱ Avançar 24 h</button>
+        </div>
         <div class="filter-bar">
           <button class="filter-chip on" onclick="toggleFilter(this,'todos')">Todos</button>
           <button class="filter-chip"    onclick="toggleFilter(this,'cliente')">Contato com Cliente</button>
@@ -716,85 +756,11 @@ body {
           <button class="filter-chip"    onclick="toggleFilter(this,'pagamento')">Pagamento</button>
         </div>
 
-        <div class="timeline" id="timeline">
-
-          <!-- entrada 1 -->
-          <div class="tl-item" data-tag="cliente">
-            <div class="tl-line"></div>
-            <div class="tl-dot crit"></div>
-            <div class="tl-time">
-              <div class="tl-time-hr">09:42</div>
-              <div class="tl-time-dt">20/10/26</div>
-            </div>
-            <div>
-              <div class="tl-card">
-                <div class="tl-card-top">
-                  <span class="tl-type">Contato com Cliente</span>
-                  <span class="chip chip-grey" style="font-size:10.5px">WhatsApp</span>
-                  <span class="tl-op">por <strong>Priscilla P.</strong></span>
-                </div>
-                <div class="obs-block int">
-                  <div class="obs-lbl">🔒 Interno — somente Operações</div>
-                  Liguei para o cliente solicitando o envio da certidão atualizada. Cliente informou que está resolvendo com o cartório de origem. Aguardar até amanhã 14h.
-                </div>
-                <div class="obs-block cli">
-                  <div class="obs-lbl">👁 Mensagem ao cliente</div>
-                  Sua solicitação requer documentação complementar. Entraremos em contato em breve com as orientações necessárias.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- entrada 2 -->
-          <div class="tl-item" data-tag="cartorio">
-            <div class="tl-line"></div>
-            <div class="tl-dot warn"></div>
-            <div class="tl-time">
-              <div class="tl-time-hr">08:15</div>
-              <div class="tl-time-dt">20/10/26</div>
-            </div>
-            <div>
-              <div class="tl-card">
-                <div class="tl-card-top">
-                  <span class="tl-type">Contato com Cartório</span>
-                  <span class="chip chip-grey" style="font-size:10.5px">E-mail</span>
-                  <span class="tl-op">por <strong>João M.</strong></span>
-                </div>
-                <div class="obs-block int">
-                  <div class="obs-lbl">🔒 Interno — somente Operações</div>
-                  E-mail enviado ao 1º RI SP perguntando status da exigência. Protocolo cartório: 2024-SP-88821. Aguardando retorno.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- entrada 3 -->
-          <div class="tl-item" data-tag="pagamento">
-            <div class="tl-dot"></div>
-            <div class="tl-time">
-              <div class="tl-time-hr">16:30</div>
-              <div class="tl-time-dt">19/10/26</div>
-            </div>
-            <div>
-              <div class="tl-card">
-                <div class="tl-card-top">
-                  <span class="tl-type">Acompanhamento de Pagamento</span>
-                  <span class="chip chip-grey" style="font-size:10.5px">Sistema</span>
-                  <span class="tl-op">por <strong>Carla T.</strong></span>
-                </div>
-                <div class="obs-block int">
-                  <div class="obs-lbl">🔒 Interno — somente Operações</div>
-                  Boleto de emolumentos emitido — R$ 1.248,00. Vencimento 21/10. Aguardando confirmação de pagamento no sistema.
-                </div>
-                <div class="obs-block cli">
-                  <div class="obs-lbl">👁 Mensagem ao cliente</div>
-                  O boleto de emolumentos foi emitido e está disponível no portal. Efetue o pagamento até a data de vencimento.
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div><!-- /timeline -->
+        <div class="timeline" id="timeline"></div>
+        <div class="empty-state" id="hist-empty" hidden>
+          <p>Nenhuma ação registrada para este pedido.</p>
+        </div>
+        
       </div><!-- /panel-hist -->
 
       <!-- ── NOVA ENTRADA ────────────────────────────── -->
@@ -802,8 +768,8 @@ body {
 
         <!-- campos automáticos -->
         <div class="auto-row">
-          <div class="auto-pill"><span>Data/hora</span> 20/10/2026 16:30</div>
-          <div class="auto-pill"><span>Operador</span> Priscilla P.</div>
+          <div class="auto-pill"><span>Data/hora</span> <span id="auto-dt" style="all:unset">—</span></div>
+          <div class="auto-pill"><span>Operador</span> <span id="auto-op" style="all:unset">Priscilla P.</span></div>
           <div class="auto-pill" style="color:var(--muted);font-size:11px">Preenchidos automaticamente</div>
         </div>
 
@@ -917,24 +883,7 @@ body {
           <span style="font-size:18px;flex-shrink:0">👁</span>
           <p>Esta é a visão que o cliente vê no portal dele. Apenas as <strong>mensagens padronizadas</strong> aparecem aqui — observações internas são ocultadas.</p>
         </div>
-        <div class="cli-steps">
-          <div class="cli-step">
-            <div class="cli-ico warn">📋</div>
-            <div class="cli-body">
-              <div class="cli-msg">Documentação complementar necessária.</div>
-              <div class="cli-dt">20/10/2026 às 09:42</div>
-              <div class="cli-sub">Sua solicitação requer documentação complementar. Entraremos em contato em breve com as orientações necessárias.</div>
-            </div>
-          </div>
-          <div class="cli-step">
-            <div class="cli-ico ok">💳</div>
-            <div class="cli-body">
-              <div class="cli-msg">Boleto de emolumentos disponível.</div>
-              <div class="cli-dt">19/10/2026 às 16:30</div>
-              <div class="cli-sub">O boleto de emolumentos foi emitido e está disponível no portal. Efetue o pagamento até a data de vencimento.</div>
-            </div>
-          </div>
-        </div>
+        <div class="cli-steps" id="cli-steps"></div>
       </div>
 
     </div><!-- /mbody -->
@@ -949,6 +898,17 @@ body {
 </div><!-- /overlay -->
 
 <div class="toast" id="toast">✓ Ação registrada com sucesso</div>
+
+<div class="confirm-ov" id="confirm-ov" hidden>
+  <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="cf-title">
+    <h4 id="cf-title">Excluir ação</h4>
+    <p>Excluir esta ação? Se houver mensagem ao cliente, ela deixará de ser exibida na visão do cliente.</p>
+    <div class="row">
+      <button class="btn btn-ghost" onclick="cancelDelete()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── CANAL CONDICIONAL ───────────────────────────────────
@@ -1003,6 +963,7 @@ const SLA_STATES = {
 };
 function openModal(state) {
   const st = SLA_STATES[state || 'crit'];
+  curSla = ({ crit: 'crit', warn: 'warn', warnh: 'warn', ok: 'ok', none: '' })[state || 'crit'];
   const strip = document.getElementById('sla-strip');
   strip.className = 'sla-strip' + (st.cls ? ' ' + st.cls : '');
   document.getElementById('sla-label').textContent = st.label;
@@ -1032,15 +993,166 @@ function goTab(id) {
   });
   // footer: oculta no histórico e visão cliente
   document.getElementById('mfooter').hidden = (id !== 'nova');
+  if (typeof refreshAuto === 'function') refreshAuto();
 }
 
-// ── FILTROS ─────────────────────────────────────────────
+// ── DADOS E REGRAS (PDR-1384 / PDR-1386) ────────────────
+const USERS = ['Priscilla P.', 'João M.', 'Carla T.'];
+let ME = 'Priscilla P.';
+const SIM_BASE = new Date(2026, 9, 20, 18, 0, 0).getTime();
+const T0 = Date.now();
+let simOffset = 0;
+function simNow() { return new Date(SIM_BASE + (Date.now() - T0) + simOffset); }
+const pad = n => String(n).padStart(2, '0');
+const fHm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const fHr = d => fHm(d) + ':' + pad(d.getSeconds());
+const fDt = d => pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(-2);
+const fFull = d => fDt(d) + ' ' + fHr(d);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let seq = 10, curFilter = 'todos', editingId = null, histOpen = {}, pendingDel = null, editErr = false, curSla = 'crit';
+const entries = [
+  { id: 1, ts: new Date(2026, 9, 20, 9, 42, 17), author: 'Priscilla P.', tipo: 'Contato com Cliente', canal: 'WhatsApp', contato: '',
+    obs: 'Liguei para o cliente solicitando o envio da certidão atualizada. Cliente informou que está resolvendo com o cartório de origem. Aguardar até amanhã 14h.',
+    msg: 'Sua solicitação requer documentação complementar. Entraremos em contato em breve com as orientações necessárias.',
+    title: 'Documentação complementar necessária.', sla: 'crit', edits: [], deleted: null },
+  { id: 2, ts: new Date(2026, 9, 20, 8, 15, 48), author: 'João M.', tipo: 'Contato com Cartório', canal: 'E-mail', contato: '',
+    obs: 'E-mail enviado ao 1º RI SP perguntando status da exigência. Protocolo cartório: 2024-SP-88821. Aguardando retorno.',
+    msg: '', sla: 'warn', edits: [], deleted: null },
+  { id: 3, ts: new Date(2026, 9, 19, 16, 30, 5), author: 'Carla T.', tipo: 'Acompanhamento de Pagamento', canal: 'Sistema', contato: '',
+    obs: 'Boleto de emolumentos emitido — R$ 1.248,00. Vencimento 21/10. Aguardando confirmação de pagamento no sistema.',
+    msg: 'O boleto de emolumentos foi emitido e está disponível no portal. Efetue o pagamento até a data de vencimento.',
+    title: 'Boleto de emolumentos disponível.', sla: '', edits: [], deleted: null },
+  { id: 4, ts: new Date(2026, 9, 18, 11, 5, 33), author: 'Priscilla P.', tipo: 'Contato com Cliente', canal: 'Telefone', contato: 'Sr. Roberto',
+    obs: 'Cliente confirmou o envio da procuração por e-mail.',
+    msg: '', sla: 'ok', edits: [], deleted: null }
+];
+const byId = id => entries.find(e => e.id === id);
+const visible = () => entries.filter(e => !e.deleted).sort((a, b) => b.ts - a.ts);
+const lastId = () => { const v = visible(); return v.length ? v[0].id : null; };
+// Edição: somente a Observação Interna e somente o autor do cadastro
+const canEdit = e => e.author === ME;
+// Exclusão: autor + último registro (sem contar excluídos) + menos de 24 h corridas
+const canDelete = e => e.author === ME && e.id === lastId() && (simNow() - e.ts) < 24 * 3600 * 1000;
+
+function tipoTag(tipo) {
+  if (tipo.includes('Cliente'))  return 'cliente';
+  if (tipo.includes('Cartório') || tipo.includes('Cartorio')) return 'cartorio';
+  if (tipo.includes('Pagamento')) return 'pagamento';
+  return 'outros';
+}
+
+// ── RENDER: HISTÓRICO ───────────────────────────────────
+function histBlock(e) {
+  const editing = editingId === e.id;
+  const edited = e.edits.length > 0;
+  let head = '<div class="obs-lbl"><span>🔒 Interno — somente Operações</span>';
+  if (edited) head += `<button class="lnk" onclick="toggleHist(${e.id})">(editado)</button>`;
+  head += '<span class="grow"></span>';
+  if (canEdit(e) && !editing) head += `<button class="mini-btn" onclick="startEdit(${e.id})">✎ Editar</button>`;
+  head += '</div>';
+  let body;
+  if (editing) {
+    body = `<textarea class="edit-ta" id="ed-ta">${esc(e.obs)}</textarea>
+      <div class="edit-actions">
+        <button class="btn btn-primary" style="padding:5px 12px" onclick="saveEdit(${e.id})">Salvar edição</button>
+        <button class="btn btn-ghost" style="padding:5px 12px" onclick="cancelEdit()">Cancelar</button>
+        ${editErr ? '<span class="edit-err">A Observação Interna é obrigatória.</span>' : ''}
+      </div>`;
+  } else body = esc(e.obs);
+  let hist = '';
+  if (edited && histOpen[e.id]) {
+    const orig = e.edits[0].prev;
+    hist = '<div class="edit-hist"><div class="ver"><b>Texto original</b> <span class="meta">· cadastrado em ' + fFull(e.ts) + ' por ' + esc(e.author) + '</span><div class="txt">' + esc(orig) + '</div></div>';
+    e.edits.forEach((x, i) => {
+      hist += `<div class="ver"><b>Edição ${i + 1}</b> <span class="meta">· ${fFull(x.when)} por ${esc(x.user)}</span>
+        <div class="txt old">Anterior: ${esc(x.prev)}</div><div class="txt">Novo: ${esc(x.next)}</div></div>`;
+    });
+    hist += '</div>';
+  }
+  return `<div class="obs-block int">${head}${body}${hist}</div>`;
+}
+function cardHtml(e) {
+  const del = canDelete(e) ? `<button class="mini-btn danger" onclick="askDelete(${e.id})">🗑 Excluir</button>` : '';
+  const ct = e.contato ? `<span class="chip chip-grey" style="font-size:10.5px">${esc(e.contato)}</span>` : '';
+  const msg = e.msg ? `<div class="obs-block cli"><div class="obs-lbl">👁 Mensagem ao cliente</div>${esc(e.msg)}</div>` : '';
+  return `<div class="tl-item" data-id="${e.id}" data-tag="${tipoTag(e.tipo)}">
+    <div class="tl-line"></div><div class="tl-dot ${e.sla}"></div>
+    <div class="tl-time"><div class="tl-time-hr">${fHr(e.ts)}</div><div class="tl-time-dt">${fDt(e.ts)}</div></div>
+    <div><div class="tl-card">
+      <div class="tl-card-top">
+        <span class="tl-type">${esc(e.tipo)}</span>
+        <span class="chip chip-grey" style="font-size:10.5px">${esc(e.canal)}</span>${ct}
+        <span class="tl-op">por <strong>${esc(e.author)}</strong></span>${del}
+      </div>
+      ${histBlock(e)}${msg}
+    </div></div></div>`;
+}
+function renderHist() {
+  const list = visible().filter(e => curFilter === 'todos' || tipoTag(e.tipo) === curFilter);
+  document.getElementById('timeline').innerHTML = list.map(cardHtml).join('');
+  document.getElementById('hist-empty').hidden = list.length > 0;
+  document.getElementById('demo-clock').textContent = 'Data/hora simulada: ' + fFull(simNow());
+}
+// ── RENDER: VISÃO DO CLIENTE ────────────────────────────
+function renderCli() {
+  const list = visible().filter(e => e.msg);
+  const box = document.getElementById('cli-steps');
+  if (!list.length) { box.innerHTML = '<div class="empty-state"><p>Nenhuma atualização foi enviada ao cliente.</p></div>'; return; }
+  box.innerHTML = list.map(e => {
+    const ico = e.tipo.includes('Pagamento') ? '💳' : (e.tipo.includes('Cartório') || e.tipo.includes('Cartorio')) ? '🏛️' : '📋';
+    const cls = e.tipo.includes('Pagamento') ? 'ok' : 'warn';
+    const d = simDate(e.ts);
+    return `<div class="cli-step"><div class="cli-ico ${cls}">${ico}</div><div class="cli-body">
+      <div class="cli-msg">${esc(e.title || e.tipo)}</div>
+      <div class="cli-dt">${d}</div><div class="cli-sub">${esc(e.msg)}</div></div></div>`;
+  }).join('');
+}
+const simDate = d => pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' às ' + fHm(d);
+function renderAll() { renderHist(); renderCli(); refreshAuto(); }
+function refreshAuto() {
+  document.getElementById('auto-dt').textContent = simDate(simNow()).replace(' às ', ' ');
+  document.getElementById('auto-op').textContent = ME;
+}
+
+// ── AÇÕES: FILTRO, USUÁRIO, RELÓGIO ─────────────────────
 function toggleFilter(btn, tag) {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
   btn.classList.add('on');
-  document.querySelectorAll('.tl-item').forEach(item => {
-    item.style.display = (tag === 'todos' || item.dataset.tag === tag) ? '' : 'none';
-  });
+  curFilter = tag;
+  renderHist();
+}
+function setUser(u) { ME = u; editingId = null; editErr = false; renderAll(); }
+function advanceClock() { simOffset += 24 * 3600 * 1000; renderAll(); }
+
+// ── EDIÇÃO DA OBSERVAÇÃO INTERNA ────────────────────────
+function startEdit(id) { const e = byId(id); if (!e || !canEdit(e)) return; editingId = id; editErr = false; renderHist(); const t = document.getElementById('ed-ta'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }
+function cancelEdit() { editingId = null; editErr = false; renderHist(); }
+function saveEdit(id) {
+  const e = byId(id); if (!e || !canEdit(e)) return;
+  const v = document.getElementById('ed-ta').value.trim();
+  if (!v) { editErr = true; renderHist(); const t = document.getElementById('ed-ta'); if (t) t.focus(); return; }
+  if (v !== e.obs) {
+    e.edits.push({ prev: e.obs, next: v, user: ME, when: simNow() });   // preserva original e cada edição
+    e.obs = v;
+    histOpen[id] = false;
+    showToast('✓ Observação Interna atualizada');
+  }
+  editingId = null; editErr = false; renderHist();
+}
+function toggleHist(id) { histOpen[id] = !histOpen[id]; renderHist(); }
+
+// ── EXCLUSÃO (LÓGICA) ───────────────────────────────────
+function askDelete(id) { const e = byId(id); if (!e || !canDelete(e)) return; pendingDel = id; document.getElementById('confirm-ov').hidden = false; }
+function cancelDelete() { pendingDel = null; document.getElementById('confirm-ov').hidden = true; }
+function confirmDelete() {
+  const e = byId(pendingDel);
+  document.getElementById('confirm-ov').hidden = true;
+  if (!e || !canDelete(e)) { pendingDel = null; renderAll(); return; }   // revalida as condições
+  e.deleted = { user: ME, when: simNow() };   // continua registrada; some da linha do tempo, do contador e da visão do cliente
+  pendingDel = null; editingId = null;
+  renderAll();
+  showToast('✓ Ação excluída');
 }
 
 // ── SALVAR ──────────────────────────────────────────────
@@ -1054,100 +1166,29 @@ function salvar() {
     if (!tipo)  missing.push('Tipo de Ação');
     if (!canal) missing.push('Canal');
     if (!obs)   missing.push('Observação Interna');
-    // mostra erro inline (sem alert)
     showError('Preencha os campos obrigatórios: ' + missing.join(', ') + '.');
     return;
   }
-
-  // Insere no topo da timeline
-  const msg   = document.getElementById('f-msg').value;
+  const msg = document.getElementById('f-msg').value;
   const contato = document.getElementById('f-contato').value;
-  inserirEntrada(tipo, canal, contato, obs, msg);
+  entries.push({ id: ++seq, ts: simNow(), author: ME, tipo, canal, contato, obs, msg, sla: curSla, edits: [], deleted: null });
 
-  // Limpa o form
-  ['f-tipo','f-canal','f-contato','f-obs','f-msg'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
+  ['f-tipo','f-canal','f-contato','f-obs','f-msg'].forEach(id => { document.getElementById(id).value = ''; });
   clearError();
 
-  // Atualiza visão do cliente se tinha mensagem
-  if (msg) inserirClienteStep(tipo, msg);
-
-  // Vai para histórico e mostra toast
-  goTab('hist');
-  showToast();
-}
-
-function inserirEntrada(tipo, canal, contato, obs, msg) {
-  const tl = document.getElementById('timeline');
-  const now = new Date();
-  const hr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-  const dt = now.getDate().toString().padStart(2,'0') + '/' + (now.getMonth()+1).toString().padStart(2,'0') + '/' + String(now.getFullYear()).slice(-2);
-
-  const msgBlock = msg ? `<div class="obs-block cli"><div class="obs-lbl">👁 Mensagem ao cliente</div>${msg}</div>` : '';
-  const contBlock = contato ? `<span class="chip chip-grey" style="font-size:10.5px">${contato}</span>` : '';
-
-  const html = `
-    <div class="tl-item" data-tag="${tipoTag(tipo)}" style="opacity:0;transition:opacity .4s">
-      <div class="tl-line"></div>
-      <div class="tl-dot ok"></div>
-      <div class="tl-time">
-        <div class="tl-time-hr">${hr}</div>
-        <div class="tl-time-dt">${dt}</div>
-      </div>
-      <div>
-        <div class="tl-card" style="border-color:var(--ok)">
-          <div class="tl-card-top">
-            <span class="tl-type">${tipo}</span>
-            <span class="chip chip-grey" style="font-size:10.5px">${canal}</span>
-            ${contBlock}
-            <span class="tl-op">por <strong>Priscilla P.</strong></span>
-          </div>
-          <div class="obs-block int"><div class="obs-lbl">🔒 Interno — somente Operações</div>${obs}</div>
-          ${msgBlock}
-        </div>
-      </div>
-    </div>`;
-
-  tl.insertAdjacentHTML('afterbegin', html);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => { tl.firstElementChild.style.opacity = '1'; });
-  });
-
-  // Reset filtro para "Todos"
+  curFilter = 'todos';
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
   document.querySelector('.filter-chip').classList.add('on');
-  document.querySelectorAll('.tl-item').forEach(i => i.style.display = '');
-}
-
-function tipoTag(tipo) {
-  if (tipo.includes('Cliente'))  return 'cliente';
-  if (tipo.includes('Cartório') || tipo.includes('Cartorio')) return 'cartorio';
-  if (tipo.includes('Pagamento')) return 'pagamento';
-  return 'outros';
-}
-
-function inserirClienteStep(tipo, msg) {
-  const steps = document.querySelector('.cli-steps');
-  const now = new Date();
-  const dt = now.toLocaleDateString('pt-BR') + ' às ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-  const ico = tipo.includes('Pagamento') ? '💳' : tipo.includes('Cartório') || tipo.includes('Cartorio') ? '🏛️' : '📋';
-  const html = `
-    <div class="cli-step" style="opacity:0;transition:opacity .4s;border-color:var(--ok)">
-      <div class="cli-ico ok">${ico}</div>
-      <div class="cli-body">
-        <div class="cli-msg">${tipo}</div>
-        <div class="cli-dt">${dt}</div>
-        <div class="cli-sub">${msg}</div>
-      </div>
-    </div>`;
-  steps.insertAdjacentHTML('afterbegin', html);
-  requestAnimationFrame(() => requestAnimationFrame(() => { steps.firstElementChild.style.opacity = '1'; }));
+  editingId = null;
+  renderAll();
+  goTab('hist');
+  showToast('✓ Ação registrada com sucesso');
 }
 
 // ── TOAST ───────────────────────────────────────────────
-function showToast() {
+function showToast(txt) {
   const t = document.getElementById('toast');
+  if (txt) t.textContent = txt;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
@@ -1169,6 +1210,7 @@ function clearError() {
   if (el) el.remove();
 }
 
+renderAll();
 // hide footer initially only on hist tab (already active)
 document.getElementById('mfooter').hidden = true;
 // show when nova is shown — handled by goTab
