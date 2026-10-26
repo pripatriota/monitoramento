@@ -711,8 +711,8 @@ body {
     <div class="mh">
       <div class="mh-top">
         <div class="mh-info">
-          <div class="mh-num" id="mh-num">PDR-58291</div>
-          <div class="mh-title" id="modal-title">Escritório Alves &amp; Costa</div>
+          <div class="mh-num" id="mh-num">Pedido 58291</div>
+          <div class="mh-title" id="modal-title">João da Silva - PROGNUM INFORMÁTICA S.A.</div>
           <div class="mh-meta">
             <span class="chip chip-warn" id="mh-status">Em Exigência</span>
             <span class="chip chip-grey" id="mh-tipo">RGI</span>
@@ -953,13 +953,13 @@ function removeAnexo(id) {
 // ── OPEN / CLOSE ────────────────────────────────────────
 const SLA_STATES = {
   // Prazo em horas (corridas): "Xh Ymin restantes" / "excedido há Xh Ymin"; barra = decorrido ÷ prazo, máx. 100%
-  crit:  { cls: '',     label: '🔴 Fora do prazo', fill: 100, remain: 'excedido há 3h 10min',   num: 'PDR-58291', name: 'Escritório Alves & Costa', status: 'Nota de Exigência - Em Análise', tipo: 'RGI', cart: '1º RI São Paulo/SP' },
-  warnh: { cls: 'warn', label: '🟡 Vence hoje',     fill: 63,  remain: '45min restantes',        num: 'PDR-58262', name: 'Nogueira Despachos',       status: 'Novo Pedido',                    tipo: 'RGI', cart: '1º RI Guarulhos/SP' },
+  crit:  { cls: '',     label: '🔴 Fora do prazo', fill: 100, remain: 'excedido há 3h 10min',   num: 'Pedido 58291', name: 'João da Silva - PROGNUM INFORMÁTICA S.A.', status: 'Nota de Exigência - Em Análise', tipo: 'RGI', cart: '1º RI São Paulo/SP' },
+  warnh: { cls: 'warn', label: '🟡 Vence hoje',     fill: 63,  remain: '45min restantes',        num: 'Pedido 58262', name: 'Marcos Nogueira - NOGUEIRA DESPACHOS LTDA.',       status: 'Novo Pedido',                    tipo: 'RGI', cart: '1º RI Guarulhos/SP' },
   // Prazo em dias (úteis): "N dias úteis restantes" / "vence hoje" / "excedido há N dias úteis"
-  warn:  { cls: 'warn', label: '🟡 Vence hoje',     fill: 100, remain: 'vence hoje',             num: 'PDR-58288', name: 'Imobiliária Horizonte',    status: 'Aguardando Pagamento',           tipo: 'RGI', cart: '2º RI Campinas/SP' },
-  ok:    { cls: 'ok',   label: '🟢 No prazo',       fill: 40,  remain: '3 dias úteis restantes', num: 'PDR-58270', name: 'Silva Advogados',          status: 'Aguardando Emissão de Certificado', tipo: 'RTD', cart: '1º RTD Curitiba/PR' },
+  warn:  { cls: 'warn', label: '🟡 Vence hoje',     fill: 100, remain: 'vence hoje',             num: 'Pedido 58288', name: 'Ana Paula Ribeiro - IMOBILIÁRIA HORIZONTE LTDA.',    status: 'Aguardando Pagamento',           tipo: 'RGI', cart: '2º RI Campinas/SP' },
+  ok:    { cls: 'ok',   label: '🟢 No prazo',       fill: 40,  remain: '3 dias úteis restantes', num: 'Pedido 58270', name: 'Carlos Silva - SILVA ADVOGADOS ASSOCIADOS',          status: 'Aguardando Emissão de Certificado', tipo: 'RTD', cart: '1º RTD Curitiba/PR' },
   // Sem prazo cadastrado: sem barra e sem tempo
-  none:  { cls: 'none', label: '⚪ Sem SLA',         fill: 0,   remain: '',                       num: 'PDR-58255', name: 'Costa & Medeiros Imóveis', status: 'Pedido Finalizado',              tipo: 'RGI', cart: '3º RI Santos/SP' }
+  none:  { cls: 'none', label: '⚪ Sem SLA',         fill: 0,   remain: '',                       num: 'Pedido 58255', name: 'Fernanda Costa - COSTA & MEDEIROS IMÓVEIS S.A.', status: 'Pedido Finalizado',              tipo: 'RGI', cart: '3º RI Santos/SP' }
 };
 function openModal(state) {
   const st = SLA_STATES[state || 'crit'];
