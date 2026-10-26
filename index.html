@@ -22,6 +22,9 @@
   --warn-lt:     #FEF3C7;
   --crit:        #DC2626;
   --crit-lt:     #FEE2E2;
+  --none:        #6B7280;
+  --none-ink:    #4B5563;
+  --none-lt:     #F3F4F6;
 
   --int-bg:      #FFFBEB;
   --int-bd:      #FCD34D;
@@ -102,8 +105,9 @@ body {
 .semaph-btn.ok   { --c: var(--ok); }
 .semaph-btn.warn { --c: var(--warn); }
 .semaph-btn.crit { --c: var(--crit); }
+.semaph-btn.none { --c: var(--none); }
 .mon-col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.mon-col small { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+.mon-col small { font-size: 11px; font-weight: 600; color: var(--muted); }
 
 /* ── OVERLAY ──────────────────────────────────────── */
 .overlay {
@@ -210,9 +214,12 @@ body {
 }
 .sla-strip.warn { background: var(--warn-lt); border-color: var(--warn); }
 .sla-strip.ok   { background: var(--ok-lt);   border-color: var(--ok); }
+.sla-strip.none { background: var(--none-lt); border-color: var(--none); }
 .sla-label-txt { font-size: 11px; font-weight: 600; color: var(--crit); flex-shrink: 0; }
 .sla-strip.warn .sla-label-txt { color: var(--warn-ink); }
 .sla-strip.ok   .sla-label-txt { color: var(--ok); }
+.sla-strip.none .sla-label-txt { color: var(--none-ink); }
+.sla-strip.none .sla-bar-track, .sla-strip.none .sla-remain { display: none; }
 .sla-bar-track {
   flex: 1;
   height: 5px;
@@ -228,6 +235,7 @@ body {
 }
 .sla-strip.warn .sla-bar-fill { background: var(--warn); }
 .sla-strip.ok   .sla-bar-fill { background: var(--ok); }
+.sla-strip.none .sla-bar-fill { background: var(--none); }
 .sla-remain { font-size: 11px; font-weight: 700; color: var(--crit); font-variant-numeric: tabular-nums; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
 .sla-strip.warn .sla-remain { color: var(--warn-ink); }
 .sla-strip.ok   .sla-remain { color: var(--ok); }
@@ -572,7 +580,7 @@ body {
 </style>
 
 <!-- Contexto: simula grid do sistema -->
-<p class="bg-hint">Clique no botão de monitoramento (círculo em moldura) na linha do pedido para abrir o modal</p>
+<p class="bg-hint">Clique no botão de monitoramento (círculo em moldura) na linha do pedido para abrir o modal. As linhas mostram prazo em horas e em dias úteis e o estado cinza, sem SLA</p>
 
 <div class="fake-row">
   <div class="fake-col">
@@ -584,11 +592,11 @@ body {
     <span>1º RI São Paulo/SP · RGI</span>
   </div>
   <div class="fake-col">
-    <span class="chip chip-warn">Em Exigência</span>
+    <span class="chip chip-warn">Nota de Exigência - Em Análise</span>
   </div>
   <div class="mon-col">
     <small>Monitoramento</small>
-    <button class="semaph-btn crit" onclick="openModal()" title="Monitoramento · Fora do prazo · 3 ações registradas" aria-label="Monitoramento · Fora do prazo · 3 ações registradas"><span class="dot"></span></button>
+    <button class="semaph-btn crit" onclick="openModal('crit')" title="SLA: Fora do prazo" aria-label="SLA: Fora do prazo"><span class="dot"></span></button>
   </div>
 </div>
 
@@ -602,11 +610,11 @@ body {
     <span>2º RI Campinas/SP · RGI</span>
   </div>
   <div class="fake-col">
-    <span class="chip chip-grey">Em Análise</span>
+    <span class="chip chip-grey">Aguardando Pagamento</span>
   </div>
   <div class="mon-col">
     <small>Monitoramento</small>
-    <button class="semaph-btn warn" onclick="openModal()" title="Monitoramento · Atenção · 2 ações registradas" aria-label="Monitoramento · Atenção · 2 ações registradas"><span class="dot"></span></button>
+    <button class="semaph-btn warn" onclick="openModal('warn')" title="SLA: Vence hoje" aria-label="SLA: Vence hoje"><span class="dot"></span></button>
   </div>
 </div>
 <div class="fake-row" style="margin-top:10px">
@@ -619,11 +627,47 @@ body {
     <span>1º RTD Curitiba/PR · RTD</span>
   </div>
   <div class="fake-col">
-    <span class="chip chip-grey">Em Andamento</span>
+    <span class="chip chip-grey">Aguardando Emissão de Certificado</span>
   </div>
   <div class="mon-col">
     <small>Monitoramento</small>
-    <button class="semaph-btn ok" onclick="openModal()" title="Monitoramento · No prazo · 2 ações registradas" aria-label="Monitoramento · No prazo · 2 ações registradas"><span class="dot"></span></button>
+    <button class="semaph-btn ok" onclick="openModal('ok')" title="SLA: No prazo" aria-label="SLA: No prazo"><span class="dot"></span></button>
+  </div>
+</div>
+
+<div class="fake-row" style="margin-top:10px">
+  <div class="fake-col">
+    <strong style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">PDR-58262</strong>
+    <span>26/10/2026</span>
+  </div>
+  <div class="fake-col grow">
+    <strong>Nogueira Despachos</strong>
+    <span>1º RI Guarulhos/SP · RGI</span>
+  </div>
+  <div class="fake-col">
+    <span class="chip chip-grey">Novo Pedido</span>
+  </div>
+  <div class="mon-col">
+    <small>Monitoramento</small>
+    <button class="semaph-btn warn" onclick="openModal('warnh')" title="SLA: Vence hoje" aria-label="SLA: Vence hoje"><span class="dot"></span></button>
+  </div>
+</div>
+
+<div class="fake-row" style="margin-top:10px">
+  <div class="fake-col">
+    <strong style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">PDR-58255</strong>
+    <span>19/10/2026</span>
+  </div>
+  <div class="fake-col grow">
+    <strong>Costa &amp; Medeiros Imóveis</strong>
+    <span>3º RI Santos/SP · RGI</span>
+  </div>
+  <div class="fake-col">
+    <span class="chip chip-grey">Pedido Finalizado</span>
+  </div>
+  <div class="mon-col">
+    <small>Monitoramento</small>
+    <button class="semaph-btn none" onclick="openModal('none')" title="SLA: não se aplica" aria-label="SLA: não se aplica"><span class="dot"></span></button>
   </div>
 </div>
 
@@ -635,19 +679,19 @@ body {
     <div class="mh">
       <div class="mh-top">
         <div class="mh-info">
-          <div class="mh-num">PDR-58291</div>
+          <div class="mh-num" id="mh-num">PDR-58291</div>
           <div class="mh-title" id="modal-title">Escritório Alves &amp; Costa</div>
           <div class="mh-meta">
-            <span class="chip chip-warn">Aguardando Regularização</span>
-            <span class="chip chip-grey">RGI</span>
-            <span class="chip chip-grey">1º RI São Paulo/SP</span>
+            <span class="chip chip-warn" id="mh-status">Em Exigência</span>
+            <span class="chip chip-grey" id="mh-tipo">RGI</span>
+            <span class="chip chip-grey" id="mh-cart">1º RI São Paulo/SP</span>
           </div>
         </div>
         <button class="mh-close" onclick="closeModal()" aria-label="Fechar">✕</button>
       </div>
 
       <div class="sla-strip" id="sla-strip">
-        <span class="sla-label-txt">🔴 Fora do Prazo</span>
+        <span class="sla-label-txt" id="sla-label">🔴 Fora do prazo</span>
         <div class="sla-bar-track"><div class="sla-bar-fill" id="sla-fill" style="width:12%"></div></div>
         <span class="sla-remain" id="sla-remain">1h 48min restantes</span>
       </div>
@@ -947,7 +991,28 @@ function removeAnexo(id) {
 }
 
 // ── OPEN / CLOSE ────────────────────────────────────────
-function openModal() {
+const SLA_STATES = {
+  // Prazo em horas (corridas): "Xh Ymin restantes" / "excedido há Xh Ymin"; barra = decorrido ÷ prazo, máx. 100%
+  crit:  { cls: '',     label: '🔴 Fora do prazo', fill: 100, remain: 'excedido há 3h 10min',   num: 'PDR-58291', name: 'Escritório Alves & Costa', status: 'Nota de Exigência - Em Análise', tipo: 'RGI', cart: '1º RI São Paulo/SP' },
+  warnh: { cls: 'warn', label: '🟡 Vence hoje',     fill: 63,  remain: '45min restantes',        num: 'PDR-58262', name: 'Nogueira Despachos',       status: 'Novo Pedido',                    tipo: 'RGI', cart: '1º RI Guarulhos/SP' },
+  // Prazo em dias (úteis): "N dias úteis restantes" / "vence hoje" / "excedido há N dias úteis"
+  warn:  { cls: 'warn', label: '🟡 Vence hoje',     fill: 100, remain: 'vence hoje',             num: 'PDR-58288', name: 'Imobiliária Horizonte',    status: 'Aguardando Pagamento',           tipo: 'RGI', cart: '2º RI Campinas/SP' },
+  ok:    { cls: 'ok',   label: '🟢 No prazo',       fill: 40,  remain: '3 dias úteis restantes', num: 'PDR-58270', name: 'Silva Advogados',          status: 'Aguardando Emissão de Certificado', tipo: 'RTD', cart: '1º RTD Curitiba/PR' },
+  // Sem prazo cadastrado: sem barra e sem tempo
+  none:  { cls: 'none', label: '⚪ Sem SLA',         fill: 0,   remain: '',                       num: 'PDR-58255', name: 'Costa & Medeiros Imóveis', status: 'Pedido Finalizado',              tipo: 'RGI', cart: '3º RI Santos/SP' }
+};
+function openModal(state) {
+  const st = SLA_STATES[state || 'crit'];
+  const strip = document.getElementById('sla-strip');
+  strip.className = 'sla-strip' + (st.cls ? ' ' + st.cls : '');
+  document.getElementById('sla-label').textContent = st.label;
+  document.getElementById('sla-fill').style.width = st.fill + '%';
+  document.getElementById('sla-remain').textContent = st.remain;
+  document.getElementById('mh-num').textContent = st.num;
+  document.getElementById('modal-title').textContent = st.name;
+  document.getElementById('mh-status').textContent = st.status;
+  document.getElementById('mh-tipo').textContent = st.tipo;
+  document.getElementById('mh-cart').textContent = st.cart;
   document.getElementById('overlay').hidden = false;
   document.body.style.overflow = 'hidden';
 }
