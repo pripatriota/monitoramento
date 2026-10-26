@@ -611,6 +611,18 @@ body {
 .anx-ext.img { background:var(--ok-lt); color:var(--ok); }
 .anx-nome { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); }
 .anx-tam { color:var(--muted); font-size:11px; flex-shrink:0; }
+/* visualizador de anexos */
+.viewer-ov { position:fixed; inset:0; background:rgba(15,23,42,.6); display:flex; align-items:center; justify-content:center; z-index:400; padding:16px; }
+.viewer-ov[hidden] { display:none !important; }
+.viewer { background:#fff; border-radius:10px; width:100%; max-width:820px; height:88vh; display:flex; flex-direction:column; box-shadow:0 16px 48px rgba(0,0,0,.3); overflow:hidden; }
+.vw-head { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.vw-info { flex:1; min-width:0; }
+.vw-nome { font-size:13.5px; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vw-tam { font-size:11px; color:var(--muted); }
+.vw-dl { text-decoration:none; padding:6px 12px; }
+.vw-body { flex:1; background:#E5E7EB; display:flex; align-items:center; justify-content:center; overflow:auto; }
+.vw-body iframe { width:100%; height:100%; border:0; background:#fff; }
+.vw-body img { max-width:100%; max-height:100%; object-fit:contain; }
 @media (max-width: 600px) {
   .frow.cols3 { grid-template-columns: 1fr 1fr; }
   .frow.cols2 { grid-template-columns: 1fr; }
@@ -910,6 +922,18 @@ body {
   </div><!-- /modal -->
 </div><!-- /overlay -->
 
+<div class="viewer-ov" id="viewer-ov" hidden>
+  <div class="viewer" role="dialog" aria-modal="true" aria-labelledby="vw-nome">
+    <div class="vw-head">
+      <span class="anx-ext pdf" id="vw-ext">PDF</span>
+      <div class="vw-info"><div class="vw-nome" id="vw-nome">arquivo.pdf</div><div class="vw-tam" id="vw-tam"></div></div>
+      <a class="btn btn-primary vw-dl" id="vw-dl" href="#" download>⬇ Baixar</a>
+      <button class="mh-close" onclick="fecharViewer()" aria-label="Fechar visualização">✕</button>
+    </div>
+    <div class="vw-body" id="vw-body"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast">✓ Ação registrada com sucesso</div>
 
 <div class="confirm-ov" id="confirm-ov" hidden>
@@ -1078,7 +1102,7 @@ function anxRows(list) {
   return list.map(a => {
     const ext = a.nome.split('.').pop().toLowerCase();
     const cls = ext === 'pdf' ? 'pdf' : 'img';
-    return `<div class="anx-row"><span class="anx-ext ${cls}">${ext.toUpperCase()}</span><span class="anx-nome" title="${esc(a.nome)}">${esc(a.nome)}</span><span class="anx-tam">${a.tam}</span><button class="mini-btn" onclick="baixar('${esc(a.nome)}')">Baixar</button></div>`;
+    return `<div class="anx-row"><span class="anx-ext ${cls}">${ext.toUpperCase()}</span><span class="anx-nome" title="${esc(a.nome)}">${esc(a.nome)}</span><span class="anx-tam">${a.tam}</span><button class="mini-btn" onclick="visualizar(this)" data-nome="${esc(a.nome)}" data-tam="${esc(a.tam)}" data-url="${a.url || ''}" data-tipo="${a.tipo || ''}" title="Visualizar" aria-label="Visualizar ${esc(a.nome)}">👁</button></div>`;
   }).join('');
 }
 // Operação vê todos os anexos; só ficam visíveis ao cliente quando a ação tem Mensagem Padronizada
@@ -1087,7 +1111,30 @@ function anxBox(e) {
   const tag = e.msg ? '<span class="anx-tag vis">👁 Visível ao cliente</span>' : '<span class="anx-tag int">🔒 Somente Operações</span>';
   return `<div class="anx-box"><div class="anx-h">📎 Anexos ${tag}</div>${anxRows(e.anexos)}</div>`;
 }
-function baixar(nome) { showToast('Download simulado: ' + nome); }
+const SAMPLE_PDF_B64 = 'JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA1OTUgODQyXSAvQ29udGVudHMgNCAwIFIgL1Jlc291cmNlcyA8PCAvRm9udCA8PCAvRjEgNSAwIFIgPj4gPj4gPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCAxMzQgPj4Kc3RyZWFtCkJUIC9GMSAyMCBUZiA2MCA3NjAgVGQgKEV4ZW1wbG8gZGUgYW5leG8pIFRqIEVUIEJUIC9GMSAxMSBUZiA2MCA3MzAgVGQgKERvY3VtZW50byBkZSBleGVtcGxvIGRvIHByb3RvdGlwbyAtIFBvcnRhbCBkZSBSZWdpc3Ryb3MpIFRqIEVUCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4KZW5kb2JqCnhyZWYKMCA2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDI0MSAwMDAwMCBuIAowMDAwMDAwNDI2IDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgNiAvUm9vdCAxIDAgUiA+PgpzdGFydHhyZWYKNDk2CiUlRU9G';
+const SAMPLE_PDF_URL = (() => {
+  try { const bin = atob(SAMPLE_PDF_B64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return URL.createObjectURL(new Blob([u], { type: 'application/pdf' })); }
+  catch (e) { return ''; }
+})();
+// Visualizador: exibe o arquivo e oferece o download dentro do componente
+function visualizar(btn) {
+  const nome = btn.dataset.nome, tam = btn.dataset.tam;
+  const ext = nome.split('.').pop().toLowerCase();
+  const isImg = ['jpg', 'jpeg', 'png'].includes(ext);
+  const url = btn.dataset.url || SAMPLE_PDF_URL;
+  const x = document.getElementById('vw-ext');
+  x.textContent = ext.toUpperCase(); x.className = 'anx-ext ' + (ext === 'pdf' ? 'pdf' : 'img');
+  document.getElementById('vw-nome').textContent = nome;
+  document.getElementById('vw-tam').textContent = tam;
+  const dl = document.getElementById('vw-dl'); dl.href = url; dl.download = nome;
+  document.getElementById('vw-body').innerHTML = isImg
+    ? `<img src="${url}" alt="${esc(nome)}">`
+    : `<iframe src="${url}#toolbar=0&navpanes=0" title="${esc(nome)}"></iframe>`;
+  document.getElementById('viewer-ov').hidden = false;
+}
+function fecharViewer() { document.getElementById('viewer-ov').hidden = true; document.getElementById('vw-body').innerHTML = ''; }
+document.getElementById('viewer-ov').addEventListener('click', e => { if (e.target.id === 'viewer-ov') fecharViewer(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('viewer-ov').hidden) { e.stopImmediatePropagation(); fecharViewer(); } }, true);
 
 // ── RENDER: HISTÓRICO ───────────────────────────────────
 function histBlock(e) {
@@ -1218,7 +1265,7 @@ function salvar() {
   }
   const msg = document.getElementById('f-msg').value;
   const contato = document.getElementById('f-contato').value;
-  entries.push({ id: ++seq, ts: simNow(), author: ME, tipo, canal, contato, obs, msg, sla: curSla, anexos: anexos.map(a => ({ nome: a.file.name, tam: fmtSize(a.file.size) })), edits: [], deleted: null });
+  entries.push({ id: ++seq, ts: simNow(), author: ME, tipo, canal, contato, obs, msg, sla: curSla, anexos: anexos.map(a => ({ nome: a.file.name, tam: fmtSize(a.file.size), url: URL.createObjectURL(a.file) })), edits: [], deleted: null });
   anexos = []; document.getElementById('file-list').innerHTML = ''; updateAnxAviso();
 
   ['f-tipo','f-canal','f-contato','f-obs','f-msg'].forEach(id => { document.getElementById(id).value = ''; });
